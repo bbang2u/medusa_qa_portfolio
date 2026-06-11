@@ -1,0 +1,8 @@
+# Medusa 본체 (검증 대상, 별도 설치)
+medusa_qa_portfolio/
+
+# 자동화 의존성·산출물
+node_modules/
+medusa_qa_autotest/node_modules/
+medusa_qa_autotest/test-results/
+medusa_qa_autotest/playwright-report/
