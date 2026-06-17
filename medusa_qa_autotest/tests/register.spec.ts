@@ -89,3 +89,29 @@ test('이메일 누락 시 거부되어야 한다 (필수값)', async ({ page })
     page.getByText(/BECOME A MEDUSA/i)
   ).toBeVisible();
 });
+
+test('이미 가입된 이메일로 가입 시도 시 차단되어야 한다 (TC-AUTH-03)', async ({ page }) => {
+  // 이 테스트는 반드시 사전에 가입되어 있는 고정 이메일을 사용해야 함
+  // 만약 DB 초기화 등으로 이메일이 없다면 첫 실행 시엔 실패할 수 있으나, 
+  // 포트폴리오 환경 전제조건에 맞춰 bbang3u@naver.com 이 존재한다고 가정함.
+  await fillRegister(page, {
+    first: 'Duplicate',
+    last: 'Test',
+    email: 'bbang3u@naver.com', 
+    password: 'ValidPass123',
+  });
+
+  await page.waitForLoadState('networkidle');
+
+  // 검증 1: 대시보드로 넘어가지 못하고 회원가입 폼이 유지되어야 함 (차단 성공)
+  await expect(
+    page.getByText(/BECOME A MEDUSA/i)
+  ).toBeVisible();
+
+  // 검증 2: 에러 메시지 노출 확인
+  // 현재 DEF-05 결함 상태이므로, 임시로 날것의 시스템 메시지가 뜨는지를 단언하여 차단 로직이 돌았음을 증명.
+  // 추후 결함이 수정되어 메시지가 바뀌면 이 단언문의 텍스트만 업데이트하면 됨.
+  await expect(
+    page.getByText('Identity with email already exists')
+  ).toBeVisible();
+});
