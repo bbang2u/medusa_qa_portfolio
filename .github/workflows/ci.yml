@@ -1,0 +1,49 @@
+name: QA Automation CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+# ---------------------------------------------------------------------------
+# 정적 검증 (Static Validation)
+#
+# 이 CI는 테스트를 "실행"하지 않고, 자동화 코드의 무결성만 검증한다.
+# 이유: E2E 테스트는 로컬 Medusa 백엔드(:9000) + 스토어프론트(:8000)에
+#       의존하는데, GitHub Actions 러너에는 해당 인스턴스가 없다.
+#       따라서 실행 대신 아래 세 가지 정적 검증으로
+#       "코드가 깨지지 않았음"을 보증한다.
+#   1) 의존성 설치 무결성  (npm ci)
+#   2) 타입 안정성          (tsc --noEmit)
+#   3) 테스트 수집 정상성    (playwright test --list)
+#
+# 자동화 코드는 루트가 아니라 medusa_qa_autotest/ 하위에 있으므로,
+# 모든 npm 명령은 working-directory로 해당 폴더를 지정해 실행한다.
+# ---------------------------------------------------------------------------
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: medusa_qa_autotest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: medusa_qa_autotest/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Validate test collection
+        run: npx playwright test --list
