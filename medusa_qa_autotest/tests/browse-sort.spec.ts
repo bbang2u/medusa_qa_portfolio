@@ -1,6 +1,6 @@
 // tests/browse-sort.spec.ts
 // TC-BROWSE-01: 상점 페이지 가격 정렬 정확성 검증
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 
 const STORE_URL = 'http://localhost:8000/dk/store';
 
@@ -8,7 +8,7 @@ const STORE_URL = 'http://localhost:8000/dk/store';
  * 화면의 모든 가격을 읽어 숫자 배열로 변환하는 헬퍼.
  * data-testid="price" 요소들의 텍스트(€10.00)에서 숫자만 추출.
  */
-async function getPrices(page): Promise<number[]> {
+async function getPrices(page: Page): Promise<number[]> {
   // 가격 요소가 최소 1개 나타날 때까지 대기 (로딩 안정성)
   await page.locator('[data-testid="price"]').first().waitFor();
 
@@ -16,7 +16,7 @@ async function getPrices(page): Promise<number[]> {
   const priceTexts = await page.locator('[data-testid="price"]').allTextContents();
 
   // "€10.00" → 10.00 : 숫자·소수점 외 문자 제거 후 float 변환
-  return priceTexts.map((t) => parseFloat(t.replace(/[^0-9.]/g, '')));
+  return priceTexts.map((t: string) => parseFloat(t.replace(/[^0-9.]/g, '')));
 }
 
 test('가격 오름차순 정렬이 정확히 적용된다', async ({ page }) => {
